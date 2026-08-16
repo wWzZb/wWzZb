@@ -7,9 +7,9 @@ I'm an open-source contributor working on **AI agents, MCP SDKs, and developer t
 ## Skills & Technologies
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://skillicons.dev/icons?i=py,pytorch,opencv,js,ts,vue,php,dotnet,git,github&theme=dark">
-  <source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=py,pytorch,opencv,js,ts,vue,php,dotnet,git,github&theme=light">
-  <img alt="Python, PyTorch, OpenCV, JavaScript, TypeScript, Vue, PHP, .NET, Git, and GitHub" src="https://skillicons.dev/icons?i=py,pytorch,opencv,js,ts,vue,php,dotnet,git,github&theme=light">
+  <source media="(prefers-color-scheme: dark)" srcset="https://skillicons.dev/icons?i=py%2Cpytorch%2Copencv%2Cjs%2Cts%2Cvue%2Cphp%2Cdotnet%2Cgit%2Cgithub&amp;theme=dark">
+  <source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=py%2Cpytorch%2Copencv%2Cjs%2Cts%2Cvue%2Cphp%2Cdotnet%2Cgit%2Cgithub&amp;theme=light">
+  <img alt="Python, PyTorch, OpenCV, JavaScript, TypeScript, Vue, PHP, .NET, Git, and GitHub" src="https://skillicons.dev/icons?i=py%2Cpytorch%2Copencv%2Cjs%2Cts%2Cvue%2Cphp%2Cdotnet%2Cgit%2Cgithub&amp;theme=light">
 </picture>
 
 Python · PyTorch · OpenCV · JavaScript · TypeScript · Vue · PHP · .NET · Git · GitHub
