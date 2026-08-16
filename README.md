@@ -35,4 +35,4 @@ Python · PyTorch · OpenCV · JavaScript · TypeScript · Vue · PHP · .NET ·
 ## Connect
 
 - Browse my reusable tools in [Agent Skills](https://github.com/wWzZb/agent-skills).
-- Explore my repositories and open-source activity here on GitHub.
+- Find me on GitHub as [@wWzZb](https://github.com/wWzZb).
