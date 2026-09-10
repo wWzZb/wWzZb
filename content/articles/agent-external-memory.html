@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="简短笔记维护任务主线，历史引用保留原始依据，检索负责把需要的细节重新带回。"><title>用笔记与历史检索构建 Agent 的外部记忆</title><style>
+/* @light-only */
+/* Source: structured-spec */
+/* EveLab Insight Design Library — Color & Typography Tokens */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Castoro&display=swap');
+
+:root {
+  /* -----------------------------
+     Color Primitives: Cyan / Mint
+     ----------------------------- */
+  --evelab-cyan-50: #e6fafb;
+  --evelab-cyan-100: #b3f0f3;
+  --evelab-cyan-200: #80e6ec;
+  --evelab-cyan-300: #4ddce4;
+  --evelab-cyan-400: #26d2dc;
+  --evelab-cyan-500: #1fc8d2;
+  --evelab-cyan-600: #1ab3bc;
+  --evelab-cyan-700: #159da5;
+  --evelab-cyan-800: #10878e;
+  --evelab-cyan-900: #0c7178;
+
+  /* -----------------------------
+     Color Primitives: Neutral / Warm Zinc
+     ----------------------------- */
+  --evelab-zinc-50: #fafafa;
+  --evelab-zinc-100: #f4f4f5;
+  --evelab-zinc-200: #e4e4e7;
+  --evelab-zinc-300: #d4d4d8;
+  --evelab-zinc-400: #9f9fa9;
+  --evelab-zinc-500: #71717a;
+  --evelab-zinc-600: #52525c;
+  --evelab-zinc-700: #3f3f46;
+  --evelab-zinc-800: #27272a;
+  --evelab-zinc-900: #09090b;
+
+  /* -----------------------------
+     Color Primitives: Amber Accent
+     ----------------------------- */
+  --evelab-amber-100: #fff3d6;
+  --evelab-amber-200: #ffe4a8;
+  --evelab-amber-300: #ffd236;
+  --evelab-amber-400: #fcb900;
+  --evelab-amber-500: #f99c00;
+  --evelab-amber-600: #e07e00;
+
+  /* -----------------------------
+     Semantic Colors
+     ----------------------------- */
+  --primary: #1fc8d2;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+  --accent: #f99c00;
+  --accent-foreground: #ffffff;
+  --background: #f8f8f7;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525c;
+  --border: #e4e4e7;
+  --input: #ffffff;
+  --input-border: #e4e4e7;
+  --ring: #1fc8d2;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+
+  /* -----------------------------
+     Surface Hierarchy
+     ----------------------------- */
+  --surface: #ffffff;
+  --surface-dim: #f9f8f6;
+  --surface-container-lowest: #f8f8f7;
+  --surface-container-low: #f9f8f6;
+  --surface-container: #ffffff;
+  --surface-container-high: #ffffff;
+  --surface-container-highest: #f4f4f5;
+
+  /* -----------------------------
+     Status Colors
+     ----------------------------- */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --warning: #f99c00;
+  --warning-foreground: #ffffff;
+
+  /* -----------------------------
+     Portable Color Aliases
+     ----------------------------- */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-border: var(--input-border);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  /* -----------------------------
+     Typography: Font Families
+     ----------------------------- */
+  --font-display: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-heading: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-body: "Roboto", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: "Castoro", Georgia, serif;
+
+  /* -----------------------------
+     Typography: Font Sizes
+     ----------------------------- */
+  --font-size-display: 56px;
+  --font-size-h1: 40px;
+  --font-size-h2: 32px;
+  --font-size-h3: 24px;
+  --font-size-h4: 20px;
+  --font-size-lead: 18px;
+  --font-size-body: 16px;
+  --font-size-sm: 14px;
+  --font-size-caption: 12px;
+  --font-size-eyebrow: 11px;
+
+  /* -----------------------------
+     Typography: Font Weights
+     ----------------------------- */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* -----------------------------
+     Typography: Line Heights
+     ----------------------------- */
+  --line-height-display: 1.1;
+  --line-height-h1: 1.15;
+  --line-height-h2: 1.2;
+  --line-height-h3: 1.25;
+  --line-height-h4: 1.35;
+  --line-height-lead: 1.6;
+  --line-height-body: 1.6;
+  --line-height-sm: 1.5;
+  --line-height-caption: 1.4;
+  --line-height-eyebrow: 1.4;
+
+  /* -----------------------------
+     Typography: Letter Spacing
+     ----------------------------- */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+
+  /* -----------------------------
+     Portable Typography Aliases
+     ----------------------------- */
+  --type-font-display: var(--font-display);
+  --type-font-heading: var(--font-heading);
+  --type-font-body: var(--font-body);
+  --type-font-serif: var(--font-serif);
+  --type-size-display: var(--font-size-display);
+  --type-size-h1: var(--font-size-h1);
+  --type-size-h2: var(--font-size-h2);
+  --type-size-h3: var(--font-size-h3);
+  --type-size-h4: var(--font-size-h4);
+  --type-size-lead: var(--font-size-lead);
+  --type-size-body: var(--font-size-body);
+  --type-size-sm: var(--font-size-sm);
+  --type-size-caption: var(--font-size-caption);
+  --type-size-eyebrow: var(--font-size-eyebrow);
+  --type-weight-normal: var(--font-weight-normal);
+  --type-weight-medium: var(--font-weight-medium);
+  --type-weight-semibold: var(--font-weight-semibold);
+  --type-weight-bold: var(--font-weight-bold);
+  --type-leading-display: var(--line-height-display);
+  --type-leading-h1: var(--line-height-h1);
+  --type-leading-h2: var(--line-height-h2);
+  --type-leading-h3: var(--line-height-h3);
+  --type-leading-h4: var(--line-height-h4);
+  --type-leading-lead: var(--line-height-lead);
+  --type-leading-body: var(--line-height-body);
+  --type-leading-sm: var(--line-height-sm);
+  --type-leading-caption: var(--line-height-caption);
+  --type-leading-eyebrow: var(--line-height-eyebrow);
+  --type-tracking-tight: var(--letter-spacing-tight);
+  --type-tracking-normal: var(--letter-spacing-normal);
+  --type-tracking-wide: var(--letter-spacing-wide);
+  --type-tracking-wider: var(--letter-spacing-wider);
+
+  /* -----------------------------
+     Spacing
+     ----------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* -----------------------------
+     Portable Spacing Aliases
+     ----------------------------- */
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
+
+  /* -----------------------------
+     Radius
+     ----------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  /* -----------------------------
+     Portable Radius Aliases
+     ----------------------------- */
+  --radius-small: var(--radius-sm);
+  --radius-medium: var(--radius-md);
+  --radius-large: var(--radius-lg);
+  --radius-xlarge: var(--radius-xl);
+  --radius-2xlarge: var(--radius-2xl);
+  --radius-3xlarge: var(--radius-3xl);
+  --radius-pill: var(--radius-full);
+
+  /* -----------------------------
+     Shadows
+     ----------------------------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-4: 0 16px 40px rgba(0, 0, 0, 0.12);
+
+  /* -----------------------------
+     Portable Shadow Aliases
+     ----------------------------- */
+  --shadow-subtle: var(--shadow-1);
+  --shadow-card: var(--shadow-2);
+  --shadow-float: var(--shadow-3);
+  --shadow-modal: var(--shadow-4);
+
+  /* -----------------------------
+     Motion
+     ----------------------------- */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* -----------------------------
+     Portable Motion Aliases
+     ----------------------------- */
+  --motion-duration-fast: var(--duration-fast);
+  --motion-duration-normal: var(--duration-normal);
+  --motion-duration-slow: var(--duration-slow);
+  --motion-ease-out: var(--ease-out);
+  --motion-ease-in-out: var(--ease-in-out);
+
+  /* -----------------------------
+     Layout / Sizing
+     ----------------------------- */
+  --size-button-height: 44px;
+  --size-button-height-sm: 36px;
+  --size-input-height: 48px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 24px;
+  --size-nav-height: 64px;
+  --max-content-width: 1280px;
+
+  /* -----------------------------
+     Portable Layout Aliases
+     ----------------------------- */
+  --layout-button-height: var(--size-button-height);
+  --layout-button-height-sm: var(--size-button-height-sm);
+  --layout-input-height: var(--size-input-height);
+  --layout-icon-sm: var(--size-icon-sm);
+  --layout-icon-md: var(--size-icon-md);
+  --layout-nav-height: var(--size-nav-height);
+  --layout-content-max-width: var(--max-content-width);
+}
+
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--background); color: var(--foreground); font: 17px/1.95 var(--font-body); -webkit-font-smoothing: antialiased; }
+.article { width: min(920px, calc(100% - 48px)); margin: 40px auto 64px; background: var(--card); border-radius: var(--radius-3xl); box-shadow: var(--shadow-2); }
+.article > header { padding: 48px 64px 32px; border-bottom: 1px solid var(--border); }
+.category { display: inline-block; padding: 6px 12px; border-radius: var(--radius-full); color: var(--evelab-cyan-900); background: var(--evelab-cyan-50); font-size: 11px; font-weight: 500; letter-spacing: .08em; line-height: 1.5; margin: 0 0 24px; }
+h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; letter-spacing: -.02em; }
+h1 { font-size: clamp(30px, 4vw, 40px); line-height: 1.4; margin: 0 0 20px; text-wrap: balance; }
+.subtitle { color: var(--muted-foreground); font-size: 17px; line-height: 1.85; margin: 0; }
+.date, .article > header small { color: var(--muted-foreground); font-size: 12px; margin: 24px 0 0; }
+main { padding: 32px 64px 40px; min-width: 0; }
+p { margin: 16px 0; }
+.intro { font-size: 18px; line-height: 1.95; }
+.intro p:first-child { margin-top: 0; }
+section { margin: 40px 0; }
+h2 { font-size: 26px; line-height: 1.5; margin: 0 0 20px; }
+h3 { font-size: 18px; line-height: 1.6; margin: 24px 0 8px; }
+strong { font-weight: 600; }
+a { color: var(--evelab-cyan-900); text-underline-offset: 4px; overflow-wrap: anywhere; }
+a:hover { color: var(--evelab-cyan-800); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+.ref { font-size: 11px; vertical-align: super; margin-left: 3px; text-decoration: none; white-space: nowrap; }
+.figure { padding: 24px; background: var(--secondary); border-radius: var(--radius-2xl); margin: 28px 0; }
+.boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; min-width: 0; }
+.box h3 { color: var(--evelab-cyan-900); font-size: 14px; margin: 0 0 8px; }
+.box p { font-size: 13px; line-height: 1.8; margin: 0; }
+.figure figcaption { font-size: 12px; color: var(--muted-foreground); line-height: 1.8; margin-top: 16px; }
+.emphasis { border: 1px solid var(--evelab-cyan-100); border-radius: var(--radius-xl); background: var(--evelab-cyan-50); padding: 20px 24px; margin: 24px 0; font-size: 17px; line-height: 1.85; }
+.emphasis p { margin: 0; }
+.table-wrap { overflow-x: auto; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-xl); margin: 24px 0; }
+table { width: 100%; border-collapse: collapse; min-width: 350px; font-size: 14px; line-height: 1.8; }
+th, td { padding: 12px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+th { background: var(--secondary); font-size: 12px; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+ul, ol { padding-left: 24px; }
+li { margin: 8px 0; }
+li::marker { color: var(--evelab-cyan-900); }
+code { font: .86em/1.75 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+p code, td code, li code { background: var(--secondary); padding: 2px 5px; border-radius: var(--radius-sm); }
+.code { margin: 28px 0; min-width: 0; }
+.code figcaption { background: var(--evelab-zinc-700); color: var(--evelab-zinc-100); font-size: 11px; padding: 10px 20px; line-height: 1.8; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+pre { background: var(--evelab-zinc-800); color: var(--evelab-zinc-100); padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.8; tab-size: 4; border-radius: var(--radius-xl); }
+.code pre { margin: 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
+pre code { font: inherit; overflow-wrap: normal; }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 28px 0; }
+.steps > li { counter-increment: step; position: relative; padding: 0 0 28px 40px; margin: 0 0 0 16px; border-left: 1px solid var(--evelab-cyan-100); }
+.steps > li::before { content: counter(step); position: absolute; left: -16px; top: 0; width: 32px; height: 32px; text-align: center; background: var(--evelab-cyan-50); border: 1px solid var(--evelab-cyan-100); border-radius: var(--radius-full); font: 500 12px/30px var(--font-heading); color: var(--evelab-cyan-900); }
+.steps > li:last-child { border-color: transparent; padding-bottom: 0; }
+.steps h3 { margin: 0 0 8px; }
+.steps p { font-size: 15px; margin: 0; }
+details { border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--card); margin: 24px 0; }
+summary { padding: 16px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+summary::marker { color: var(--evelab-cyan-900); }
+details > div { padding: 0 20px 20px; font-size: 14px; }
+.small { font-size: 13px; color: var(--muted-foreground); }
+.article > footer { padding: 28px 64px 40px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted-foreground); }
+footer h2 { font-size: 16px; margin: 0 0 16px; color: var(--foreground); }
+footer ol { padding-left: 20px; }
+footer li { margin: 12px 0; }
+footer p { font-size: 12px; line-height: 1.85; }
+.skip { position: absolute; top: -80px; left: 16px; background: var(--card); padding: 8px 16px; border-radius: var(--radius-full); z-index: 5; }
+.skip:focus { top: 8px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+.pair > div { border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px; background: var(--card); min-width: 0; }
+.pair h3 { margin: 0 0 12px; font-size: 14px; color: var(--evelab-cyan-900); }
+.pair p, .pair ul { font-size: 14px; line-height: 1.85; margin: 8px 0; }
+::selection { background: var(--evelab-cyan-100); color: var(--foreground); }
+@media (max-width: 680px) {
+  body { font-size: 16px; }
+  .article { width: calc(100% - 24px); margin: 16px auto 32px; border-radius: var(--radius-2xl); }
+  .article > header { padding: 32px 24px 24px; }
+  h1 { font-size: 30px; }
+  .subtitle { font-size: 15px; }
+  main { padding: 24px; }
+  .intro { font-size: 17px; }
+  h2 { font-size: 22px; }
+  .boxes, .pair { grid-template-columns: 1fr; }
+  .figure { padding: 16px; }
+  .steps > li { padding-left: 28px; }
+  .article > footer { padding: 24px; }
+  pre { font-size: 11px; padding: 16px; }
+  table { min-width: 320px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media print {
+  body { background: white; color: #111; font-size: 11pt; }
+  .article { width: 100%; border: 0; margin: 0; box-shadow: none; }
+  .article > header, main, .article > footer { padding: 16px 0; }
+  h1 { font-size: 27pt; }
+  h2 { font-size: 17pt; break-after: avoid; }
+  h3, summary { break-after: avoid; }
+  p { orphans: 3; widows: 3; }
+  .intro { font-size: 12pt; }
+  .box, .pair > div { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 9pt; }
+  tr { break-inside: avoid; }
+  .code pre, pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--secondary); color: #111; font-size: 8pt; }
+  .code figcaption { background: var(--border); color: #222; }
+  details::details-content { display: block; content-visibility: visible; }
+  details > *:not(summary) { display: block !important; }
+  footer { font-size: 9pt; }
+  .skip { display: none; }
+  a { color: inherit; }
+}
+
+</style><script type="application/json" id="article-meta">
+{
+  "slug": "agent-external-memory",
+  "description": "简短笔记维护任务主线，历史引用保留原始依据，检索负责把需要的细节重新带回。",
+  "date": "2026-09-09",
+  "updated": "2026-09-09",
+  "category": "agent-engineering",
+  "tags": [
+    "外部记忆",
+    "历史检索"
+  ],
+  "topics": {
+    "context-management": 2
+  },
+  "draft": false
+}
+</script>
+</head><body><a class="skip" href="#main">跳到正文</a><article class="article"><header><p class="category">AGENT ENGINEERING / Agent 工程</p><h1>用笔记与历史检索构建 Agent 的外部记忆</h1><p class="subtitle">简短笔记维护任务主线，历史引用保留原始依据，检索负责把需要的细节重新带回。</p><p class="date">2026 年 9 月 9 日</p></header><main id="main"><div class="intro"><p>长时间工作的 AI Agent 会积累大量内容：用户要求、代码、工具结果，以及尝试失败的过程。把所有信息一直放进模型输入并不可行，因为上下文容量有限。</p><p>一种常见处理方式是把旧内容压缩成摘要。另一种方式是让 Agent 持续维护外部笔记，并在需要时回查历史。后者并没有取消信息提炼，而是增加了持续维护和按需恢复的能力。</p></div><section id="compression"><h2>笔记仍然是一种信息提炼</h2><p>摘要和笔记都要决定哪些信息值得保留。“首页已经完成，下一步制作商品列表”无论写在哪种载体中，都没有记录开发首页时的每一次操作。</p><p>如果笔记只是另一段更短的文字，却没有维护规则和回查入口，它与摘要的区别可能很小。外部记忆真正需要解决的是：重点怎样保持最新，遗漏的细节怎样找回，以及读取结果怎样重新进入模型输入。</p><div class="table-wrap"><table><thead><tr><th scope="col">维度</th><th scope="col">以摘要为主的压缩</th><th scope="col">笔记与历史配合</th></tr></thead><tbody><tr><td>重点如何整理</td><td>在压缩时生成较短记录。</td><td>工作中持续维护目标、约束与状态。</td></tr><tr><td>细节没有写入时</td><td>取决于系统是否另有历史读取能力。</td><td>使用历史工具定位并读取原始记录。</td></tr><tr><td>恢复依靠什么</td><td>保留下来的摘要及其他内容。</td><td>笔记主线与按需找回的依据。</td></tr></tbody></table></div><p>这不是两种互斥架构。采用摘要的系统同样可以配置历史工具；是否有检索能力，不能仅从一个实验开关是否开启来判断。</p></section><section id="checkpoint"><h2>一份有用的笔记，需要状态和依据</h2><p>一个网站任务中，模型发现商品图片无法显示。把几千字报错全部抄入笔记，会增加以后读取的负担；只写“图片有问题”，又不足以恢复工作。更合适的记录可以同时包含当前状态和历史引用。</p><figure class="code"><figcaption>教学示例：交接笔记的内容组织</figcaption><pre><code>目标：完成商品页面，暂时不加入支付。
+已完成：首页与商品列表。
+当前问题：图片路径解析失败。
+下一步：修复路径，再检查页面显示。
+依据：完整报错的窗口 ID 与消息 ID。</code></pre></figure><p>前几行说明任务接下来怎样推进，最后一行指向可以核对的原始记录。这里的 ID 必须来自实际工具结果，不能由模型随意编造。</p><aside class="emphasis"><p>笔记负责保留工作主线，引用负责保留通往依据的路径。两者配合，才可能在缩短输入的同时保有找回细节的能力。</p></aside></section><section id="retrieval"><h2>读取时，先定位，再取回内容</h2><ol class="steps"><li><h3>已有明确引用</h3><p>直接按记录标识读取目标消息，必要时只取相关字符范围。</p></li><li><h3>只有线索，没有引用</h3><p>先搜索特征文本，或按窗口、角色和工具列出记录，再确定目标。</p></li><li><h3>使用返回结果</h3><p>把读回的原话、代码或报错加入后续模型输入，继续完成当前任务。</p></li></ol><p>这类“外部”记忆指信息位于当前模型输入之外，并不说明它一定存放在本机文件或向量数据库中。存储位置与检索算法，需要检查具体实现。</p></section><section id="codex"><h2>Codex 的 notes 与 history 如何分工</h2><p>在 <code>rust-v0.153.4</code> 中，notes 提供笔记的列举、读取、搜索、追加和覆盖写入；history 提供窗口列举、消息列举、内容搜索与单条读取。它们分别操作可维护状态和只读历史。<a class="ref" href="#ref-1" aria-label="参考资料 1">[1]</a></p><p><code>history.read_item</code> 要求窗口 ID 和消息 ID，可限制返回的字符范围。<code>search_contents</code> 的查询参数定义为区分大小写的字面子串，因此不能直接把该接口解释为语义搜索。例如 <code>ImagePathError</code> 与 <code>imagepatherror</code> 是不同的查询条件。<a class="ref" href="#ref-2" aria-label="参考资料 2">[2]</a></p><p>notes 中的路径是服务端笔记空间里的虚拟路径。客户端把读写操作转成带认证的后端请求，而不是默认在本机创建同名文件。这个调用方式也不足以证明后端使用了哪种数据库或索引。<a class="ref" href="#ref-3" aria-label="参考资料 3">[3]</a></p></section><section id="maintenance"><h2>外部记忆需要维护，也有读取成本</h2><p>笔记可能漏掉关键约束，或者在任务变化后保留过时结论。历史引用也可能指错消息。即使资料能被检索到，模型仍需判断它是否适用于当前问题。</p><p>因此，维护重点不只是“写更多”：状态变化后要修订旧描述，关键结论要留下可追溯依据，读取时要限制无关内容。外部记录一旦被读回，就会重新占用上下文。</p><p>对于足够长、需要反复核对细节的任务，这套方式提供了清晰的恢复路径。对于本来就能完整放入输入的短任务，额外的写入和检索也会产生开销。评价方案时，应观察关键约束是否保留、依据是否找对、重复工作是否减少，而不能只统计笔记数量。</p></section></main><footer><h2>参考资料</h2><ol><li id="ref-1"><a href="https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/ext/history-notes/src/tools.rs#L30" target="_blank" rel="noopener">Codex：历史与笔记操作</a></li><li id="ref-2"><a href="https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/ext/history-notes/src/tools.rs#L142" target="_blank" rel="noopener">Codex：历史读取与搜索参数</a></li><li id="ref-3"><a href="https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/ext/history-notes/src/backend.rs#L28" target="_blank" rel="noopener">Codex：笔记和历史的后端请求</a></li><li id="ref-4"><a href="https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/models-manager/models.json#L105" target="_blank" rel="noopener">Codex：默认笔记维护指引</a></li></ol><p>文中的 Codex 实现细节以公开源码 rust-v0.153.4 为准；后续版本可能调整接口、默认值和行为。</p></footer></article></body></html>

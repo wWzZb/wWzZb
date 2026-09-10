@@ -1,0 +1,401 @@
+/* @light-only */
+/* Source: structured-spec */
+/* EveLab Insight Design Library — Color & Typography Tokens */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Castoro&display=swap');
+
+:root {
+  /* -----------------------------
+     Color Primitives: Cyan / Mint
+     ----------------------------- */
+  --evelab-cyan-50: #e6fafb;
+  --evelab-cyan-100: #b3f0f3;
+  --evelab-cyan-200: #80e6ec;
+  --evelab-cyan-300: #4ddce4;
+  --evelab-cyan-400: #26d2dc;
+  --evelab-cyan-500: #1fc8d2;
+  --evelab-cyan-600: #1ab3bc;
+  --evelab-cyan-700: #159da5;
+  --evelab-cyan-800: #10878e;
+  --evelab-cyan-900: #0c7178;
+
+  /* -----------------------------
+     Color Primitives: Neutral / Warm Zinc
+     ----------------------------- */
+  --evelab-zinc-50: #fafafa;
+  --evelab-zinc-100: #f4f4f5;
+  --evelab-zinc-200: #e4e4e7;
+  --evelab-zinc-300: #d4d4d8;
+  --evelab-zinc-400: #9f9fa9;
+  --evelab-zinc-500: #71717a;
+  --evelab-zinc-600: #52525c;
+  --evelab-zinc-700: #3f3f46;
+  --evelab-zinc-800: #27272a;
+  --evelab-zinc-900: #09090b;
+
+  /* -----------------------------
+     Color Primitives: Amber Accent
+     ----------------------------- */
+  --evelab-amber-100: #fff3d6;
+  --evelab-amber-200: #ffe4a8;
+  --evelab-amber-300: #ffd236;
+  --evelab-amber-400: #fcb900;
+  --evelab-amber-500: #f99c00;
+  --evelab-amber-600: #e07e00;
+
+  /* -----------------------------
+     Semantic Colors
+     ----------------------------- */
+  --primary: #1fc8d2;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+  --accent: #f99c00;
+  --accent-foreground: #ffffff;
+  --background: #f8f8f7;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525c;
+  --border: #e4e4e7;
+  --input: #ffffff;
+  --input-border: #e4e4e7;
+  --ring: #1fc8d2;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+
+  /* -----------------------------
+     Surface Hierarchy
+     ----------------------------- */
+  --surface: #ffffff;
+  --surface-dim: #f9f8f6;
+  --surface-container-lowest: #f8f8f7;
+  --surface-container-low: #f9f8f6;
+  --surface-container: #ffffff;
+  --surface-container-high: #ffffff;
+  --surface-container-highest: #f4f4f5;
+
+  /* -----------------------------
+     Status Colors
+     ----------------------------- */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --warning: #f99c00;
+  --warning-foreground: #ffffff;
+
+  /* -----------------------------
+     Portable Color Aliases
+     ----------------------------- */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-border: var(--input-border);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  /* -----------------------------
+     Typography: Font Families
+     ----------------------------- */
+  --font-display: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-heading: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-body: "Roboto", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: "Castoro", Georgia, serif;
+
+  /* -----------------------------
+     Typography: Font Sizes
+     ----------------------------- */
+  --font-size-display: 56px;
+  --font-size-h1: 40px;
+  --font-size-h2: 32px;
+  --font-size-h3: 24px;
+  --font-size-h4: 20px;
+  --font-size-lead: 18px;
+  --font-size-body: 16px;
+  --font-size-sm: 14px;
+  --font-size-caption: 12px;
+  --font-size-eyebrow: 11px;
+
+  /* -----------------------------
+     Typography: Font Weights
+     ----------------------------- */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* -----------------------------
+     Typography: Line Heights
+     ----------------------------- */
+  --line-height-display: 1.1;
+  --line-height-h1: 1.15;
+  --line-height-h2: 1.2;
+  --line-height-h3: 1.25;
+  --line-height-h4: 1.35;
+  --line-height-lead: 1.6;
+  --line-height-body: 1.6;
+  --line-height-sm: 1.5;
+  --line-height-caption: 1.4;
+  --line-height-eyebrow: 1.4;
+
+  /* -----------------------------
+     Typography: Letter Spacing
+     ----------------------------- */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+
+  /* -----------------------------
+     Portable Typography Aliases
+     ----------------------------- */
+  --type-font-display: var(--font-display);
+  --type-font-heading: var(--font-heading);
+  --type-font-body: var(--font-body);
+  --type-font-serif: var(--font-serif);
+  --type-size-display: var(--font-size-display);
+  --type-size-h1: var(--font-size-h1);
+  --type-size-h2: var(--font-size-h2);
+  --type-size-h3: var(--font-size-h3);
+  --type-size-h4: var(--font-size-h4);
+  --type-size-lead: var(--font-size-lead);
+  --type-size-body: var(--font-size-body);
+  --type-size-sm: var(--font-size-sm);
+  --type-size-caption: var(--font-size-caption);
+  --type-size-eyebrow: var(--font-size-eyebrow);
+  --type-weight-normal: var(--font-weight-normal);
+  --type-weight-medium: var(--font-weight-medium);
+  --type-weight-semibold: var(--font-weight-semibold);
+  --type-weight-bold: var(--font-weight-bold);
+  --type-leading-display: var(--line-height-display);
+  --type-leading-h1: var(--line-height-h1);
+  --type-leading-h2: var(--line-height-h2);
+  --type-leading-h3: var(--line-height-h3);
+  --type-leading-h4: var(--line-height-h4);
+  --type-leading-lead: var(--line-height-lead);
+  --type-leading-body: var(--line-height-body);
+  --type-leading-sm: var(--line-height-sm);
+  --type-leading-caption: var(--line-height-caption);
+  --type-leading-eyebrow: var(--line-height-eyebrow);
+  --type-tracking-tight: var(--letter-spacing-tight);
+  --type-tracking-normal: var(--letter-spacing-normal);
+  --type-tracking-wide: var(--letter-spacing-wide);
+  --type-tracking-wider: var(--letter-spacing-wider);
+
+  /* -----------------------------
+     Spacing
+     ----------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* -----------------------------
+     Portable Spacing Aliases
+     ----------------------------- */
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
+
+  /* -----------------------------
+     Radius
+     ----------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  /* -----------------------------
+     Portable Radius Aliases
+     ----------------------------- */
+  --radius-small: var(--radius-sm);
+  --radius-medium: var(--radius-md);
+  --radius-large: var(--radius-lg);
+  --radius-xlarge: var(--radius-xl);
+  --radius-2xlarge: var(--radius-2xl);
+  --radius-3xlarge: var(--radius-3xl);
+  --radius-pill: var(--radius-full);
+
+  /* -----------------------------
+     Shadows
+     ----------------------------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-4: 0 16px 40px rgba(0, 0, 0, 0.12);
+
+  /* -----------------------------
+     Portable Shadow Aliases
+     ----------------------------- */
+  --shadow-subtle: var(--shadow-1);
+  --shadow-card: var(--shadow-2);
+  --shadow-float: var(--shadow-3);
+  --shadow-modal: var(--shadow-4);
+
+  /* -----------------------------
+     Motion
+     ----------------------------- */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* -----------------------------
+     Portable Motion Aliases
+     ----------------------------- */
+  --motion-duration-fast: var(--duration-fast);
+  --motion-duration-normal: var(--duration-normal);
+  --motion-duration-slow: var(--duration-slow);
+  --motion-ease-out: var(--ease-out);
+  --motion-ease-in-out: var(--ease-in-out);
+
+  /* -----------------------------
+     Layout / Sizing
+     ----------------------------- */
+  --size-button-height: 44px;
+  --size-button-height-sm: 36px;
+  --size-input-height: 48px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 24px;
+  --size-nav-height: 64px;
+  --max-content-width: 1280px;
+
+  /* -----------------------------
+     Portable Layout Aliases
+     ----------------------------- */
+  --layout-button-height: var(--size-button-height);
+  --layout-button-height-sm: var(--size-button-height-sm);
+  --layout-input-height: var(--size-input-height);
+  --layout-icon-sm: var(--size-icon-sm);
+  --layout-icon-md: var(--size-icon-md);
+  --layout-nav-height: var(--size-nav-height);
+  --layout-content-max-width: var(--max-content-width);
+}
+
+/* -----------------------------
+   Typography Utility Classes
+   ----------------------------- */
+.font-display {
+  font-family: var(--font-display);
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-display);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.font-h1 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-h1);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.font-h2 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-h2);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.font-h3 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-h3);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.font-h4 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-h4);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.font-lead {
+  font-family: var(--font-body);
+  font-size: var(--font-size-lead);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-lead);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.font-body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.font-sm {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-sm);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.font-caption {
+  font-family: var(--font-body);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-caption);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.font-eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--font-size-eyebrow);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-eyebrow);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+}

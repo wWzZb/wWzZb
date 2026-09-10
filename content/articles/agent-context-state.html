@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="理解 AI 的“记忆”，先分清信息保存在哪里、何时进入模型输入，以及哪些任务能够访问它。"><title>AI Agent 的上下文：输入、历史与持久状态</title><style>
+/* @light-only */
+/* Source: structured-spec */
+/* EveLab Insight Design Library — Color & Typography Tokens */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Castoro&display=swap');
+
+:root {
+  /* -----------------------------
+     Color Primitives: Cyan / Mint
+     ----------------------------- */
+  --evelab-cyan-50: #e6fafb;
+  --evelab-cyan-100: #b3f0f3;
+  --evelab-cyan-200: #80e6ec;
+  --evelab-cyan-300: #4ddce4;
+  --evelab-cyan-400: #26d2dc;
+  --evelab-cyan-500: #1fc8d2;
+  --evelab-cyan-600: #1ab3bc;
+  --evelab-cyan-700: #159da5;
+  --evelab-cyan-800: #10878e;
+  --evelab-cyan-900: #0c7178;
+
+  /* -----------------------------
+     Color Primitives: Neutral / Warm Zinc
+     ----------------------------- */
+  --evelab-zinc-50: #fafafa;
+  --evelab-zinc-100: #f4f4f5;
+  --evelab-zinc-200: #e4e4e7;
+  --evelab-zinc-300: #d4d4d8;
+  --evelab-zinc-400: #9f9fa9;
+  --evelab-zinc-500: #71717a;
+  --evelab-zinc-600: #52525c;
+  --evelab-zinc-700: #3f3f46;
+  --evelab-zinc-800: #27272a;
+  --evelab-zinc-900: #09090b;
+
+  /* -----------------------------
+     Color Primitives: Amber Accent
+     ----------------------------- */
+  --evelab-amber-100: #fff3d6;
+  --evelab-amber-200: #ffe4a8;
+  --evelab-amber-300: #ffd236;
+  --evelab-amber-400: #fcb900;
+  --evelab-amber-500: #f99c00;
+  --evelab-amber-600: #e07e00;
+
+  /* -----------------------------
+     Semantic Colors
+     ----------------------------- */
+  --primary: #1fc8d2;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+  --accent: #f99c00;
+  --accent-foreground: #ffffff;
+  --background: #f8f8f7;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525c;
+  --border: #e4e4e7;
+  --input: #ffffff;
+  --input-border: #e4e4e7;
+  --ring: #1fc8d2;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+
+  /* -----------------------------
+     Surface Hierarchy
+     ----------------------------- */
+  --surface: #ffffff;
+  --surface-dim: #f9f8f6;
+  --surface-container-lowest: #f8f8f7;
+  --surface-container-low: #f9f8f6;
+  --surface-container: #ffffff;
+  --surface-container-high: #ffffff;
+  --surface-container-highest: #f4f4f5;
+
+  /* -----------------------------
+     Status Colors
+     ----------------------------- */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --warning: #f99c00;
+  --warning-foreground: #ffffff;
+
+  /* -----------------------------
+     Portable Color Aliases
+     ----------------------------- */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-border: var(--input-border);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  /* -----------------------------
+     Typography: Font Families
+     ----------------------------- */
+  --font-display: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-heading: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-body: "Roboto", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: "Castoro", Georgia, serif;
+
+  /* -----------------------------
+     Typography: Font Sizes
+     ----------------------------- */
+  --font-size-display: 56px;
+  --font-size-h1: 40px;
+  --font-size-h2: 32px;
+  --font-size-h3: 24px;
+  --font-size-h4: 20px;
+  --font-size-lead: 18px;
+  --font-size-body: 16px;
+  --font-size-sm: 14px;
+  --font-size-caption: 12px;
+  --font-size-eyebrow: 11px;
+
+  /* -----------------------------
+     Typography: Font Weights
+     ----------------------------- */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* -----------------------------
+     Typography: Line Heights
+     ----------------------------- */
+  --line-height-display: 1.1;
+  --line-height-h1: 1.15;
+  --line-height-h2: 1.2;
+  --line-height-h3: 1.25;
+  --line-height-h4: 1.35;
+  --line-height-lead: 1.6;
+  --line-height-body: 1.6;
+  --line-height-sm: 1.5;
+  --line-height-caption: 1.4;
+  --line-height-eyebrow: 1.4;
+
+  /* -----------------------------
+     Typography: Letter Spacing
+     ----------------------------- */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+
+  /* -----------------------------
+     Portable Typography Aliases
+     ----------------------------- */
+  --type-font-display: var(--font-display);
+  --type-font-heading: var(--font-heading);
+  --type-font-body: var(--font-body);
+  --type-font-serif: var(--font-serif);
+  --type-size-display: var(--font-size-display);
+  --type-size-h1: var(--font-size-h1);
+  --type-size-h2: var(--font-size-h2);
+  --type-size-h3: var(--font-size-h3);
+  --type-size-h4: var(--font-size-h4);
+  --type-size-lead: var(--font-size-lead);
+  --type-size-body: var(--font-size-body);
+  --type-size-sm: var(--font-size-sm);
+  --type-size-caption: var(--font-size-caption);
+  --type-size-eyebrow: var(--font-size-eyebrow);
+  --type-weight-normal: var(--font-weight-normal);
+  --type-weight-medium: var(--font-weight-medium);
+  --type-weight-semibold: var(--font-weight-semibold);
+  --type-weight-bold: var(--font-weight-bold);
+  --type-leading-display: var(--line-height-display);
+  --type-leading-h1: var(--line-height-h1);
+  --type-leading-h2: var(--line-height-h2);
+  --type-leading-h3: var(--line-height-h3);
+  --type-leading-h4: var(--line-height-h4);
+  --type-leading-lead: var(--line-height-lead);
+  --type-leading-body: var(--line-height-body);
+  --type-leading-sm: var(--line-height-sm);
+  --type-leading-caption: var(--line-height-caption);
+  --type-leading-eyebrow: var(--line-height-eyebrow);
+  --type-tracking-tight: var(--letter-spacing-tight);
+  --type-tracking-normal: var(--letter-spacing-normal);
+  --type-tracking-wide: var(--letter-spacing-wide);
+  --type-tracking-wider: var(--letter-spacing-wider);
+
+  /* -----------------------------
+     Spacing
+     ----------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* -----------------------------
+     Portable Spacing Aliases
+     ----------------------------- */
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
+
+  /* -----------------------------
+     Radius
+     ----------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  /* -----------------------------
+     Portable Radius Aliases
+     ----------------------------- */
+  --radius-small: var(--radius-sm);
+  --radius-medium: var(--radius-md);
+  --radius-large: var(--radius-lg);
+  --radius-xlarge: var(--radius-xl);
+  --radius-2xlarge: var(--radius-2xl);
+  --radius-3xlarge: var(--radius-3xl);
+  --radius-pill: var(--radius-full);
+
+  /* -----------------------------
+     Shadows
+     ----------------------------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-4: 0 16px 40px rgba(0, 0, 0, 0.12);
+
+  /* -----------------------------
+     Portable Shadow Aliases
+     ----------------------------- */
+  --shadow-subtle: var(--shadow-1);
+  --shadow-card: var(--shadow-2);
+  --shadow-float: var(--shadow-3);
+  --shadow-modal: var(--shadow-4);
+
+  /* -----------------------------
+     Motion
+     ----------------------------- */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* -----------------------------
+     Portable Motion Aliases
+     ----------------------------- */
+  --motion-duration-fast: var(--duration-fast);
+  --motion-duration-normal: var(--duration-normal);
+  --motion-duration-slow: var(--duration-slow);
+  --motion-ease-out: var(--ease-out);
+  --motion-ease-in-out: var(--ease-in-out);
+
+  /* -----------------------------
+     Layout / Sizing
+     ----------------------------- */
+  --size-button-height: 44px;
+  --size-button-height-sm: 36px;
+  --size-input-height: 48px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 24px;
+  --size-nav-height: 64px;
+  --max-content-width: 1280px;
+
+  /* -----------------------------
+     Portable Layout Aliases
+     ----------------------------- */
+  --layout-button-height: var(--size-button-height);
+  --layout-button-height-sm: var(--size-button-height-sm);
+  --layout-input-height: var(--size-input-height);
+  --layout-icon-sm: var(--size-icon-sm);
+  --layout-icon-md: var(--size-icon-md);
+  --layout-nav-height: var(--size-nav-height);
+  --layout-content-max-width: var(--max-content-width);
+}
+
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--background); color: var(--foreground); font: 17px/1.95 var(--font-body); -webkit-font-smoothing: antialiased; }
+.article { width: min(920px, calc(100% - 48px)); margin: 40px auto 64px; background: var(--card); border-radius: var(--radius-3xl); box-shadow: var(--shadow-2); }
+.article > header { padding: 48px 64px 32px; border-bottom: 1px solid var(--border); }
+.category { display: inline-block; padding: 6px 12px; border-radius: var(--radius-full); color: var(--evelab-cyan-900); background: var(--evelab-cyan-50); font-size: 11px; font-weight: 500; letter-spacing: .08em; line-height: 1.5; margin: 0 0 24px; }
+h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; letter-spacing: -.02em; }
+h1 { font-size: clamp(30px, 4vw, 40px); line-height: 1.4; margin: 0 0 20px; text-wrap: balance; }
+.subtitle { color: var(--muted-foreground); font-size: 17px; line-height: 1.85; margin: 0; }
+.date, .article > header small { color: var(--muted-foreground); font-size: 12px; margin: 24px 0 0; }
+main { padding: 32px 64px 40px; min-width: 0; }
+p { margin: 16px 0; }
+.intro { font-size: 18px; line-height: 1.95; }
+.intro p:first-child { margin-top: 0; }
+section { margin: 40px 0; }
+h2 { font-size: 26px; line-height: 1.5; margin: 0 0 20px; }
+h3 { font-size: 18px; line-height: 1.6; margin: 24px 0 8px; }
+strong { font-weight: 600; }
+a { color: var(--evelab-cyan-900); text-underline-offset: 4px; overflow-wrap: anywhere; }
+a:hover { color: var(--evelab-cyan-800); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+.ref { font-size: 11px; vertical-align: super; margin-left: 3px; text-decoration: none; white-space: nowrap; }
+.figure { padding: 24px; background: var(--secondary); border-radius: var(--radius-2xl); margin: 28px 0; }
+.boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; min-width: 0; }
+.box h3 { color: var(--evelab-cyan-900); font-size: 14px; margin: 0 0 8px; }
+.box p { font-size: 13px; line-height: 1.8; margin: 0; }
+.figure figcaption { font-size: 12px; color: var(--muted-foreground); line-height: 1.8; margin-top: 16px; }
+.emphasis { border: 1px solid var(--evelab-cyan-100); border-radius: var(--radius-xl); background: var(--evelab-cyan-50); padding: 20px 24px; margin: 24px 0; font-size: 17px; line-height: 1.85; }
+.emphasis p { margin: 0; }
+.table-wrap { overflow-x: auto; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-xl); margin: 24px 0; }
+table { width: 100%; border-collapse: collapse; min-width: 350px; font-size: 14px; line-height: 1.8; }
+th, td { padding: 12px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+th { background: var(--secondary); font-size: 12px; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+ul, ol { padding-left: 24px; }
+li { margin: 8px 0; }
+li::marker { color: var(--evelab-cyan-900); }
+code { font: .86em/1.75 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+p code, td code, li code { background: var(--secondary); padding: 2px 5px; border-radius: var(--radius-sm); }
+.code { margin: 28px 0; min-width: 0; }
+.code figcaption { background: var(--evelab-zinc-700); color: var(--evelab-zinc-100); font-size: 11px; padding: 10px 20px; line-height: 1.8; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+pre { background: var(--evelab-zinc-800); color: var(--evelab-zinc-100); padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.8; tab-size: 4; border-radius: var(--radius-xl); }
+.code pre { margin: 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
+pre code { font: inherit; overflow-wrap: normal; }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 28px 0; }
+.steps > li { counter-increment: step; position: relative; padding: 0 0 28px 40px; margin: 0 0 0 16px; border-left: 1px solid var(--evelab-cyan-100); }
+.steps > li::before { content: counter(step); position: absolute; left: -16px; top: 0; width: 32px; height: 32px; text-align: center; background: var(--evelab-cyan-50); border: 1px solid var(--evelab-cyan-100); border-radius: var(--radius-full); font: 500 12px/30px var(--font-heading); color: var(--evelab-cyan-900); }
+.steps > li:last-child { border-color: transparent; padding-bottom: 0; }
+.steps h3 { margin: 0 0 8px; }
+.steps p { font-size: 15px; margin: 0; }
+details { border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--card); margin: 24px 0; }
+summary { padding: 16px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+summary::marker { color: var(--evelab-cyan-900); }
+details > div { padding: 0 20px 20px; font-size: 14px; }
+.small { font-size: 13px; color: var(--muted-foreground); }
+.article > footer { padding: 28px 64px 40px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted-foreground); }
+footer h2 { font-size: 16px; margin: 0 0 16px; color: var(--foreground); }
+footer ol { padding-left: 20px; }
+footer li { margin: 12px 0; }
+footer p { font-size: 12px; line-height: 1.85; }
+.skip { position: absolute; top: -80px; left: 16px; background: var(--card); padding: 8px 16px; border-radius: var(--radius-full); z-index: 5; }
+.skip:focus { top: 8px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+.pair > div { border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px; background: var(--card); min-width: 0; }
+.pair h3 { margin: 0 0 12px; font-size: 14px; color: var(--evelab-cyan-900); }
+.pair p, .pair ul { font-size: 14px; line-height: 1.85; margin: 8px 0; }
+::selection { background: var(--evelab-cyan-100); color: var(--foreground); }
+@media (max-width: 680px) {
+  body { font-size: 16px; }
+  .article { width: calc(100% - 24px); margin: 16px auto 32px; border-radius: var(--radius-2xl); }
+  .article > header { padding: 32px 24px 24px; }
+  h1 { font-size: 30px; }
+  .subtitle { font-size: 15px; }
+  main { padding: 24px; }
+  .intro { font-size: 17px; }
+  h2 { font-size: 22px; }
+  .boxes, .pair { grid-template-columns: 1fr; }
+  .figure { padding: 16px; }
+  .steps > li { padding-left: 28px; }
+  .article > footer { padding: 24px; }
+  pre { font-size: 11px; padding: 16px; }
+  table { min-width: 320px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media print {
+  body { background: white; color: #111; font-size: 11pt; }
+  .article { width: 100%; border: 0; margin: 0; box-shadow: none; }
+  .article > header, main, .article > footer { padding: 16px 0; }
+  h1 { font-size: 27pt; }
+  h2 { font-size: 17pt; break-after: avoid; }
+  h3, summary { break-after: avoid; }
+  p { orphans: 3; widows: 3; }
+  .intro { font-size: 12pt; }
+  .box, .pair > div { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 9pt; }
+  tr { break-inside: avoid; }
+  .code pre, pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--secondary); color: #111; font-size: 8pt; }
+  .code figcaption { background: var(--border); color: #222; }
+  details::details-content { display: block; content-visibility: visible; }
+  details > *:not(summary) { display: block !important; }
+  footer { font-size: 9pt; }
+  .skip { display: none; }
+  a { color: inherit; }
+}
+
+</style><script type="application/json" id="article-meta">
+{
+  "slug": "agent-context-state",
+  "description": "理解 AI 的“记忆”，先分清信息保存在哪里、何时进入模型输入，以及哪些任务能够访问它。",
+  "date": "2026-09-09",
+  "updated": "2026-09-09",
+  "category": "agent-engineering",
+  "tags": [
+    "上下文",
+    "状态管理"
+  ],
+  "topics": {
+    "context-management": 1
+  },
+  "draft": false
+}
+</script>
+</head><body><a class="skip" href="#main">跳到正文</a><article class="article"><header><p class="category">AGENT ENGINEERING / Agent 工程</p><h1>AI Agent 的上下文：输入、历史与持久状态</h1><p class="subtitle">理解 AI 的“记忆”，先分清信息保存在哪里、何时进入模型输入，以及哪些任务能够访问它。</p><p class="date">2026 年 9 月 9 日</p></header><main id="main"><div class="intro"><p>一个 AI 编程助手处理了几十轮需求，聊天界面还能翻到最早的消息，却在后面忘了“暂时不要加入支付功能”。这并不一定意味着旧消息被删除了。一种可能的解释是：那句话没有继续出现在模型当前使用的输入中。</p><p>能够连续调用工具、完成任务的 AI 助手通常称为 Agent。分析它的记忆能力，需要同时看模型的输入、应用保存的历史，以及为继续工作而维护的状态。三者相互联系，但承担不同职责。</p></div><section id="input"><h2>上下文是输入，窗口是容量</h2><p>模型回答一次问题时，收到的不只有最新的一句用户消息，还可能包含工作规则、此前的回答、代码文件和工具结果。模型在这次请求中拿到的这些内容，构成当前上下文。</p><p>上下文窗口描述可处理内容的容量，通常以 token 计量。token 是模型处理内容的单位，不总等于一个汉字或一个单词。随着代码、报错和对话增多，运行程序必须控制输入用量。</p><p>在长任务运行过程中，程序也会使用“当前窗口”“下一个窗口”标记不同阶段的活动上下文。这里的切换发生在模型输入层面，与浏览器开了几个标签页没有关系。</p></section><section id="state"><h2>一条要求，可以同时存在于三个位置</h2><figure class="figure"><div class="boxes"><div class="box"><h3>活动上下文</h3><p>当前模型请求携带的信息。模型可以直接处理。</p></div><div class="box"><h3>历史记录</h3><p>已经发生的消息和操作结果。需要被保留或重新读取，才能进入当次输入。</p></div><div class="box"><h3>持久任务状态</h3><p>为继续工作整理的目标、约束、进度和依据，通常保存在活动输入之外。</p></div></div><figcaption>图 1：按职责区分信息，不要求它们使用三个独立的存储系统。</figcaption></figure><p>以“暂时不做支付”为例，它首先出现在用户消息中，成为历史记录。Agent 可以把它写入交接笔记；读取笔记后，这条要求又进入当前上下文。同一条信息因此可能同时具有原文、笔记表述和当前输入中的副本。</p><p>这也解释了为什么“应用保存了记录”不足以保证“模型接下来一定会使用记录”。中间还需要选择和读取。</p></section><section id="lifetime"><h2>保存的笔记与读回的内容，有不同的生命周期</h2><p>假设 Agent 读到一份笔记：“首页完成，图片路径仍需修复。”只要还在同一个活动窗口，后续请求通常会继续使用已经读回的内容。用户再发一条消息，并不必然要求重新读取笔记。</p><p>当程序重建上下文时，旧活动内容可能被替换。保存在外部的笔记仍可用于恢复，但其正文不保证自动出现在新窗口里。模型需要再次读取所需资料。</p><p>此外，外部笔记发生更新，也不会让先前读取的结果变成实时视图。把它想成档案原件和桌上的复印件更容易理解：原件保存着，复印件已经被读到；原件更新以后，需要重新取得内容，才能确认最新状态。</p></section><section id="scope"><h2>跨窗口、跨任务和跨项目，是三种范围</h2><div class="table-wrap"><table><thead><tr><th scope="col">变化</th><th scope="col">发生的事情</th><th scope="col">需要另外确认的事情</th></tr></thead><tbody><tr><td>同一任务换窗口</td><td>重新组织模型的活动输入。</td><td>哪些状态会自动恢复，哪些需要读取。</td></tr><tr><td>新建独立任务</td><td>建立另一段任务运行关系。</td><td>新任务有权访问哪些旧记录。</td></tr><tr><td>两个任务操作同一项目</td><td>可能读写同一组代码文件。</td><td>是否共享笔记、历史或其他任务状态。</td></tr></tbody></table></div><p>因此，两个 Agent 都能打开同一份代码，并不意味着它们共享了整个上下文。文件、笔记和历史可以有各自的权限与作用范围。长期保存多久，也不能单从“支持跨窗口保留”推出来。</p></section><section id="implementation"><h2>从 Codex 的切换实现看这三个层次</h2><p>Codex 的 <code>rust-v0.153.4</code> 提供了一个具体例子。在 TokenBudget 路径中，<code>start_new_context_window()</code> 推进窗口状态，重新组装初始信息，然后通过 <code>replace_compacted_history()</code> 替换当前活动历史。被替换的是后续请求使用的内容，项目文件并不会因此被清空。<a class="ref" href="#ref-1" aria-label="参考资料 1">[1]</a></p><p>历史和笔记工具通过后端接口访问记录，请求包含任务与 agent 标识。这种实现将活动上下文、可读取的外部记录和访问范围分别处理。客户端的这些标识并不能证明任意独立任务都可共享资料。<a class="ref" href="#ref-2" aria-label="参考资料 2">[2]</a></p><p>分析另一套 Agent 时，也可以沿着相同的三个问题展开：模型当次收到了什么，哪些信息还只保存在外部，以及当前任务到底有权读取哪些记录。只有这三点明确，“记住了”才有具体含义。</p></section></main><footer><h2>参考资料</h2><ol><li id="ref-1"><a href="https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/core/src/session/mod.rs#L4183" target="_blank" rel="noopener">Codex：新窗口的建立与活动历史替换</a></li><li id="ref-2"><a href="https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/ext/history-notes/src/backend.rs#L28" target="_blank" rel="noopener">Codex：历史与笔记的后端请求</a></li><li id="ref-3"><a href="https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/core/src/session/context_window.rs#L58" target="_blank" rel="noopener">Codex：活动窗口的预算计算</a></li></ol><p>文中的 Codex 实现细节以公开源码 rust-v0.153.4 为准；后续版本可能调整接口、默认值和行为。</p></footer></article></body></html>

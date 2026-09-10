@@ -1,0 +1,21 @@
+{
+  "title": "技术博客",
+  "description": "Agent 工程、上下文管理与工具调用的原理、实现和使用方法。",
+  "author": "",
+  "language": "zh-CN",
+  "site_url": "",
+  "base_path": "",
+  "categories": {
+    "agent-engineering": {
+      "name": "Agent 工程",
+      "description": "从模型输入到工具协作，理解 AI Agent 怎样持续完成任务。"
+    }
+  },
+  "topics": {
+    "context-management": {
+      "name": "理解 Agent 的上下文管理",
+      "description": "从上下文与状态的区别出发，理解外部记忆、窗口交接，以及模型和运行时的分工。",
+      "intro": "上下文管理既关系到模型眼前有什么，也关系到一个长任务如何持续推进。这组文章分别解释信息的层级、外部记忆的组织方式、窗口切换与恢复，以及应用程序的控制边界。可以按顺序建立整体认识，也可以直接选择感兴趣的文章。"
+    }
+  }
+}
