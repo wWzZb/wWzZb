@@ -79,6 +79,18 @@ class BlogBuildTests(unittest.TestCase):
         self.assertTrue(any('%' in url for url in urls))
         self.assertTrue(all(url.startswith('https://example.github.io/my-blog/') for url in urls))
 
+    def test_mixed_case_repository_path_is_preserved(self):
+        build.build(self.root,base_path='/wWzZb',site_url='https://wwzzb.github.io/wWzZb')
+        dist=self.root/'dist'
+        self.assertEqual(verify(dist,'/wWzZb')[1],4)
+        self.assertIn('href="/wWzZb/assets/site.css"',(dist/'index.html').read_text())
+        index=json.loads((dist/'search-index.json').read_text())
+        self.assertTrue(all(a['url'].startswith('/wWzZb/articles/') for a in index['articles']))
+        rss=ET.parse(dist/'feed.xml').getroot()
+        self.assertTrue(all(item.text.startswith('https://wwzzb.github.io/wWzZb/') for item in rss.findall('./channel/item/link')))
+        for path in ('/wWzZb/../secret','/wWzZb?q=1','/wWzZb/#hash'):
+            with self.assertRaises(build.BuildError):build.normalize_base(path)
+
     def test_custom_domain_root_and_metadata_escaping(self):
         self.metadata(description='A & B <script>alert("x")</script>')
         build.build(self.root,base_path='',site_url='https://blog.example.com')

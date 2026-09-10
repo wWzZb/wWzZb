@@ -148,8 +148,9 @@ def normalize_base(value):
     if not isinstance(value, str) or not value.startswith("/"):
         raise BuildError("base_path 必须为空或以 / 开头，例如 /personal-blog")
     parts = value.strip("/").split("/")
-    if any(not SLUG.fullmatch(part) for part in parts):
-        raise BuildError("base_path 只能包含英文小写路径段，不得包含 ..、空格或查询参数")
+    # GitHub repository paths are case-sensitive; validate without changing them.
+    if any(not SLUG.fullmatch(part.lower()) for part in parts):
+        raise BuildError("base_path 只能包含英文字母、数字和连字符路径段，不得包含 ..、空格或查询参数")
     return "/" + "/".join(parts)
 
 
