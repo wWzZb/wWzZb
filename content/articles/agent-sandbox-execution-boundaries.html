@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="沙箱不是提示词，也不一定是虚拟机。以 Codex 和 TRAE 为例，理解命令执行的权限边界，以及本机受限执行与独立环境的取舍。">
+  <title>Agent 沙箱到底是什么：从受限进程到独立环境</title>
+  <style>
+/* @light-only */
+/* Source: structured-spec */
+/* EveLab Insight Design Library — Color & Typography Tokens */
+
+
+:root {
+  /* -----------------------------
+     Color Primitives: Cyan / Mint
+     ----------------------------- */
+  --evelab-cyan-50: #e6fafb;
+  --evelab-cyan-100: #b3f0f3;
+  --evelab-cyan-200: #80e6ec;
+  --evelab-cyan-300: #4ddce4;
+  --evelab-cyan-400: #26d2dc;
+  --evelab-cyan-500: #1fc8d2;
+  --evelab-cyan-600: #1ab3bc;
+  --evelab-cyan-700: #159da5;
+  --evelab-cyan-800: #10878e;
+  --evelab-cyan-900: #0c7178;
+
+  /* -----------------------------
+     Color Primitives: Neutral / Warm Zinc
+     ----------------------------- */
+  --evelab-zinc-50: #fafafa;
+  --evelab-zinc-100: #f4f4f5;
+  --evelab-zinc-200: #e4e4e7;
+  --evelab-zinc-300: #d4d4d8;
+  --evelab-zinc-400: #9f9fa9;
+  --evelab-zinc-500: #71717a;
+  --evelab-zinc-600: #52525c;
+  --evelab-zinc-700: #3f3f46;
+  --evelab-zinc-800: #27272a;
+  --evelab-zinc-900: #09090b;
+
+  /* -----------------------------
+     Color Primitives: Amber Accent
+     ----------------------------- */
+  --evelab-amber-100: #fff3d6;
+  --evelab-amber-200: #ffe4a8;
+  --evelab-amber-300: #ffd236;
+  --evelab-amber-400: #fcb900;
+  --evelab-amber-500: #f99c00;
+  --evelab-amber-600: #e07e00;
+
+  /* -----------------------------
+     Semantic Colors
+     ----------------------------- */
+  --primary: #1fc8d2;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+  --accent: #f99c00;
+  --accent-foreground: #ffffff;
+  --background: #f8f8f7;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525c;
+  --border: #e4e4e7;
+  --input: #ffffff;
+  --input-border: #e4e4e7;
+  --ring: #1fc8d2;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+
+  /* -----------------------------
+     Surface Hierarchy
+     ----------------------------- */
+  --surface: #ffffff;
+  --surface-dim: #f9f8f6;
+  --surface-container-lowest: #f8f8f7;
+  --surface-container-low: #f9f8f6;
+  --surface-container: #ffffff;
+  --surface-container-high: #ffffff;
+  --surface-container-highest: #f4f4f5;
+
+  /* -----------------------------
+     Status Colors
+     ----------------------------- */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --warning: #f99c00;
+  --warning-foreground: #ffffff;
+
+  /* -----------------------------
+     Portable Color Aliases
+     ----------------------------- */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-border: var(--input-border);
+  --color-ring: var(--ring);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  /* -----------------------------
+     Typography: Font Families
+     ----------------------------- */
+  --font-display: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-heading: "Poppins", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-body: "Roboto", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: "Castoro", Georgia, serif;
+
+  /* -----------------------------
+     Typography: Font Sizes
+     ----------------------------- */
+  --font-size-display: 56px;
+  --font-size-h1: 40px;
+  --font-size-h2: 32px;
+  --font-size-h3: 24px;
+  --font-size-h4: 20px;
+  --font-size-lead: 18px;
+  --font-size-body: 16px;
+  --font-size-sm: 14px;
+  --font-size-caption: 12px;
+  --font-size-eyebrow: 11px;
+
+  /* -----------------------------
+     Typography: Font Weights
+     ----------------------------- */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* -----------------------------
+     Typography: Line Heights
+     ----------------------------- */
+  --line-height-display: 1.1;
+  --line-height-h1: 1.15;
+  --line-height-h2: 1.2;
+  --line-height-h3: 1.25;
+  --line-height-h4: 1.35;
+  --line-height-lead: 1.6;
+  --line-height-body: 1.6;
+  --line-height-sm: 1.5;
+  --line-height-caption: 1.4;
+  --line-height-eyebrow: 1.4;
+
+  /* -----------------------------
+     Typography: Letter Spacing
+     ----------------------------- */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+
+  /* -----------------------------
+     Portable Typography Aliases
+     ----------------------------- */
+  --type-font-display: var(--font-display);
+  --type-font-heading: var(--font-heading);
+  --type-font-body: var(--font-body);
+  --type-font-serif: var(--font-serif);
+  --type-size-display: var(--font-size-display);
+  --type-size-h1: var(--font-size-h1);
+  --type-size-h2: var(--font-size-h2);
+  --type-size-h3: var(--font-size-h3);
+  --type-size-h4: var(--font-size-h4);
+  --type-size-lead: var(--font-size-lead);
+  --type-size-body: var(--font-size-body);
+  --type-size-sm: var(--font-size-sm);
+  --type-size-caption: var(--font-size-caption);
+  --type-size-eyebrow: var(--font-size-eyebrow);
+  --type-weight-normal: var(--font-weight-normal);
+  --type-weight-medium: var(--font-weight-medium);
+  --type-weight-semibold: var(--font-weight-semibold);
+  --type-weight-bold: var(--font-weight-bold);
+  --type-leading-display: var(--line-height-display);
+  --type-leading-h1: var(--line-height-h1);
+  --type-leading-h2: var(--line-height-h2);
+  --type-leading-h3: var(--line-height-h3);
+  --type-leading-h4: var(--line-height-h4);
+  --type-leading-lead: var(--line-height-lead);
+  --type-leading-body: var(--line-height-body);
+  --type-leading-sm: var(--line-height-sm);
+  --type-leading-caption: var(--line-height-caption);
+  --type-leading-eyebrow: var(--line-height-eyebrow);
+  --type-tracking-tight: var(--letter-spacing-tight);
+  --type-tracking-normal: var(--letter-spacing-normal);
+  --type-tracking-wide: var(--letter-spacing-wide);
+  --type-tracking-wider: var(--letter-spacing-wider);
+
+  /* -----------------------------
+     Spacing
+     ----------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* -----------------------------
+     Portable Spacing Aliases
+     ----------------------------- */
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
+
+  /* -----------------------------
+     Radius
+     ----------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 9999px;
+
+  /* -----------------------------
+     Portable Radius Aliases
+     ----------------------------- */
+  --radius-small: var(--radius-sm);
+  --radius-medium: var(--radius-md);
+  --radius-large: var(--radius-lg);
+  --radius-xlarge: var(--radius-xl);
+  --radius-2xlarge: var(--radius-2xl);
+  --radius-3xlarge: var(--radius-3xl);
+  --radius-pill: var(--radius-full);
+
+  /* -----------------------------
+     Shadows
+     ----------------------------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-4: 0 16px 40px rgba(0, 0, 0, 0.12);
+
+  /* -----------------------------
+     Portable Shadow Aliases
+     ----------------------------- */
+  --shadow-subtle: var(--shadow-1);
+  --shadow-card: var(--shadow-2);
+  --shadow-float: var(--shadow-3);
+  --shadow-modal: var(--shadow-4);
+
+  /* -----------------------------
+     Motion
+     ----------------------------- */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* -----------------------------
+     Portable Motion Aliases
+     ----------------------------- */
+  --motion-duration-fast: var(--duration-fast);
+  --motion-duration-normal: var(--duration-normal);
+  --motion-duration-slow: var(--duration-slow);
+  --motion-ease-out: var(--ease-out);
+  --motion-ease-in-out: var(--ease-in-out);
+
+  /* -----------------------------
+     Layout / Sizing
+     ----------------------------- */
+  --size-button-height: 44px;
+  --size-button-height-sm: 36px;
+  --size-input-height: 48px;
+  --size-icon-sm: 16px;
+  --size-icon-md: 24px;
+  --size-nav-height: 64px;
+  --max-content-width: 1280px;
+
+  /* -----------------------------
+     Portable Layout Aliases
+     ----------------------------- */
+  --layout-button-height: var(--size-button-height);
+  --layout-button-height-sm: var(--size-button-height-sm);
+  --layout-input-height: var(--size-input-height);
+  --layout-icon-sm: var(--size-icon-sm);
+  --layout-icon-md: var(--size-icon-md);
+  --layout-nav-height: var(--size-nav-height);
+  --layout-content-max-width: var(--max-content-width);
+}
+
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--background); color: var(--foreground); font: 17px/1.95 var(--font-body); -webkit-font-smoothing: antialiased; }
+.article { width: min(920px, calc(100% - 48px)); margin: 40px auto 64px; background: var(--card); border-radius: var(--radius-3xl); box-shadow: var(--shadow-2); }
+.article > header { padding: 48px 64px 32px; border-bottom: 1px solid var(--border); }
+.category { display: inline-block; padding: 6px 12px; border-radius: var(--radius-full); color: var(--evelab-cyan-900); background: var(--evelab-cyan-50); font-size: 11px; font-weight: 500; letter-spacing: .08em; line-height: 1.5; margin: 0 0 24px; }
+h1, h2, h3 { font-family: var(--font-heading); font-weight: 600; letter-spacing: -.02em; }
+h1 { font-size: clamp(30px, 4vw, 40px); line-height: 1.4; margin: 0 0 20px; text-wrap: balance; }
+.subtitle { color: var(--muted-foreground); font-size: 17px; line-height: 1.85; margin: 0; }
+.date, .article > header small { color: var(--muted-foreground); font-size: 12px; margin: 24px 0 0; }
+main { padding: 32px 64px 40px; min-width: 0; }
+p { margin: 16px 0; }
+.intro { font-size: 18px; line-height: 1.95; }
+.intro p:first-child { margin-top: 0; }
+section { margin: 40px 0; }
+h2 { font-size: 26px; line-height: 1.5; margin: 0 0 20px; }
+h3 { font-size: 18px; line-height: 1.6; margin: 24px 0 8px; }
+strong { font-weight: 600; }
+a { color: var(--evelab-cyan-900); text-underline-offset: 4px; overflow-wrap: anywhere; }
+a:hover { color: var(--evelab-cyan-800); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+.ref { font-size: 11px; vertical-align: super; margin-left: 3px; text-decoration: none; white-space: nowrap; }
+.figure { padding: 24px; background: var(--secondary); border-radius: var(--radius-2xl); margin: 28px 0; }
+.boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; min-width: 0; }
+.box h3 { color: var(--evelab-cyan-900); font-size: 14px; margin: 0 0 8px; }
+.box p { font-size: 13px; line-height: 1.8; margin: 0; }
+.figure figcaption { font-size: 12px; color: var(--muted-foreground); line-height: 1.8; margin-top: 16px; }
+.emphasis { border: 1px solid var(--evelab-cyan-100); border-radius: var(--radius-xl); background: var(--evelab-cyan-50); padding: 20px 24px; margin: 24px 0; font-size: 17px; line-height: 1.85; }
+.emphasis p { margin: 0; }
+.table-wrap { overflow-x: auto; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-xl); margin: 24px 0; }
+table { width: 100%; border-collapse: collapse; min-width: 350px; font-size: 14px; line-height: 1.8; }
+th, td { padding: 12px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+th { background: var(--secondary); font-size: 12px; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+ul, ol { padding-left: 24px; }
+li { margin: 8px 0; }
+li::marker { color: var(--evelab-cyan-900); }
+code { font: .86em/1.75 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+p code, td code, li code { background: var(--secondary); padding: 2px 5px; border-radius: var(--radius-sm); }
+.code { margin: 28px 0; min-width: 0; }
+.code figcaption { background: var(--evelab-zinc-700); color: var(--evelab-zinc-100); font-size: 11px; padding: 10px 20px; line-height: 1.8; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+pre { background: var(--evelab-zinc-800); color: var(--evelab-zinc-100); padding: 24px; overflow-x: auto; font-size: 13px; line-height: 1.8; tab-size: 4; border-radius: var(--radius-xl); }
+.code pre { margin: 0; border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
+pre code { font: inherit; overflow-wrap: normal; }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 28px 0; }
+.steps > li { counter-increment: step; position: relative; padding: 0 0 28px 40px; margin: 0 0 0 16px; border-left: 1px solid var(--evelab-cyan-100); }
+.steps > li::before { content: counter(step); position: absolute; left: -16px; top: 0; width: 32px; height: 32px; text-align: center; background: var(--evelab-cyan-50); border: 1px solid var(--evelab-cyan-100); border-radius: var(--radius-full); font: 500 12px/30px var(--font-heading); color: var(--evelab-cyan-900); }
+.steps > li:last-child { border-color: transparent; padding-bottom: 0; }
+.steps h3 { margin: 0 0 8px; }
+.steps p { font-size: 15px; margin: 0; }
+details { border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--card); margin: 24px 0; }
+summary { padding: 16px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+summary::marker { color: var(--evelab-cyan-900); }
+details > div { padding: 0 20px 20px; font-size: 14px; }
+.small { font-size: 13px; color: var(--muted-foreground); }
+.article > footer { padding: 28px 64px 40px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted-foreground); }
+footer h2 { font-size: 16px; margin: 0 0 16px; color: var(--foreground); }
+footer ol { padding-left: 20px; }
+footer li { margin: 12px 0; }
+footer p { font-size: 12px; line-height: 1.85; }
+.skip { position: absolute; top: -80px; left: 16px; background: var(--card); padding: 8px 16px; border-radius: var(--radius-full); z-index: 5; }
+.skip:focus { top: 8px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+.pair > div { border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px; background: var(--card); min-width: 0; }
+.pair h3 { margin: 0 0 12px; font-size: 14px; color: var(--evelab-cyan-900); }
+.pair p, .pair ul { font-size: 14px; line-height: 1.85; margin: 8px 0; }
+::selection { background: var(--evelab-cyan-100); color: var(--foreground); }
+@media (max-width: 680px) {
+  body { font-size: 16px; }
+  .article { width: calc(100% - 24px); margin: 16px auto 32px; border-radius: var(--radius-2xl); }
+  .article > header { padding: 32px 24px 24px; }
+  h1 { font-size: 30px; }
+  .subtitle { font-size: 15px; }
+  main { padding: 24px; }
+  .intro { font-size: 17px; }
+  h2 { font-size: 22px; }
+  .boxes, .pair { grid-template-columns: 1fr; }
+  .figure { padding: 16px; }
+  .steps > li { padding-left: 28px; }
+  .article > footer { padding: 24px; }
+  pre { font-size: 11px; padding: 16px; }
+  table { min-width: 320px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media print {
+  body { background: white; color: #111; font-size: 11pt; }
+  .article { width: 100%; border: 0; margin: 0; box-shadow: none; }
+  .article > header, main, .article > footer { padding: 16px 0; }
+  h1 { font-size: 27pt; }
+  h2 { font-size: 17pt; break-after: avoid; }
+  h3, summary { break-after: avoid; }
+  p { orphans: 3; widows: 3; }
+  .intro { font-size: 12pt; }
+  .box, .pair > div { break-inside: avoid; }
+  .table-wrap { overflow: visible; }
+  table { min-width: 0; font-size: 9pt; }
+  tr { break-inside: avoid; }
+  .code pre, pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--secondary); color: #111; font-size: 8pt; }
+  .code figcaption { background: var(--border); color: #222; }
+  details::details-content { display: block; content-visibility: visible; }
+  details > *:not(summary) { display: block !important; }
+  footer { font-size: 9pt; }
+  .skip { display: none; }
+  a { color: inherit; }
+}
+
+</style>
+  <script type="application/json" id="article-meta">
+{
+  "slug": "agent-sandbox-execution-boundaries",
+  "description": "沙箱不是提示词，也不一定是虚拟机。以 Codex 和 TRAE 为例，理解命令执行的权限边界，以及本机受限执行与独立环境的取舍。",
+  "date": "2026-09-17",
+  "category": "agent-engineering",
+  "tags": ["沙箱", "执行环境", "权限控制", "Codex", "TRAE"],
+  "topics": {},
+  "updated": "2026-09-17",
+  "draft": false
+}
+  </script>
+</head>
+<body>
+  <article class="article">
+    <header>
+      <p class="category">Agent 工程 · 执行与安全</p>
+      <h1>Agent 沙箱到底是什么：从受限进程到独立环境</h1>
+      <p class="subtitle">沙箱不是提示词，也不一定是虚拟机。以 Codex 和 TRAE 为例，理解命令执行的权限边界，以及本机受限执行与独立环境的取舍。</p>
+      <p class="date">2026 年 9 月 17 日 · 官方资料与源码核对</p>
+    </header>
+    <main id="main">
+      <div class="intro"><p>让 Agent 修改项目、运行测试时，它执行的可能就是熟悉的 Python、Node 或 Shell 命令。既然程序和文件都在自己的电脑上，所谓“在沙箱里运行”，究竟多了什么？</p><p><strong>多的是一条由执行系统强制落实的边界：</strong>命令可以读取什么、修改什么、连接哪里，不再只取决于模型是否听话。这个边界可以围绕本机上的一个进程建立，也可以由独立容器或虚拟机提供。</p></div>
+
+      <section id="not-a-prompt"><h2>一、提示词告诉模型规则，沙箱让规则生效</h2>
+      <p>“只修改项目目录”写进上下文，是给模型的行为要求。模型通常会照做，但提示词本身不会改变操作系统的文件权限。如果执行工具仍以完整权限运行，越界命令依然可能造成真实影响。</p>
+      <p>沙箱则改变命令的执行条件。下面是一个假设规则：允许写入项目目录，允许读取必要的运行库，禁止写入项目以外的私人文档，并限制网络访问。它不是某个产品的完整默认配置，而是用于理解机制的例子。</p>
+      <div class="table-wrap"><table><thead><tr><th scope="col">操作</th><th scope="col">在这套示例规则下</th><th scope="col">由谁落实</th></tr></thead><tbody><tr><td>读取项目源码</td><td>允许</td><td>执行环境的访问控制</td></tr><tr><td>修改项目中的业务文件</td><td>允许</td><td>执行环境的访问控制</td></tr><tr><td>写入未授权的私人文档目录</td><td>拒绝</td><td>操作系统的权限或隔离机制</td></tr><tr><td>向未放行的网络地址发送数据</td><td>拒绝</td><td>所配置的网络控制机制</td></tr></tbody></table></div>
+      <p>这里还要区分“只读”和“不可访问”：不能改文件，不等于不能看文件。若目标是保护机密，仅限制写入并不够，还要控制读取和数据外发。</p>
+      <aside class="emphasis"><p>提示词约束模型的选择；沙箱约束执行程序的能力。两者相互配合，但不能互相替代。</p></aside>
+      </section>
+
+      <section id="execution"><h2>二、沙箱通常接在工具的执行端</h2>
+      <p>模型不会直接向硬盘写字节。它先发出工具调用，应用中的执行程序接收请求，再启动命令或调用服务。因此，沙箱通常在“请求即将变成真实操作”的地方接入，而不一定把整个聊天应用或模型放进去。</p>
+      <ol class="steps"><li><h3>模型提出操作</h3><p>例如请求运行 <code>python report.py</code>，生成一份报告。</p></li><li><h3>执行程序确定权限</h3><p>结合当前任务配置、允许目录和审批结果，决定在哪里运行、授予哪些能力。</p></li><li><h3>带着限制启动程序</h3><p>使用系统提供的受限进程机制，或把命令交给已准备好的容器、虚拟机。</p></li><li><h3>系统执行检查，工具返回结果</h3><p>程序请求读写文件或访问网络时，相关机制落实限制；执行程序收集输出、错误和退出状态。</p></li></ol>
+      <p>所以，“一个工具可以配一个沙箱”是合理的，但不是固定的一对一关系。多个工具可以共用一个任务环境；同一个命令工具也可以按任务选择不同环境。</p>
+      <p>同时，命令沙箱不自动覆盖所有工具。例如，另一个工具直接调用云端文档接口，它的权限还要由该工具和服务端授权控制。不能因为终端命令受限，就认为所有外部操作都经过同一个边界。</p>
+      <h3>为什么使用起来可能没有明显感觉？</h3><p>允许范围内的操作本来就能直接完成，不需要每次弹窗。“是否允许发起这次操作”的审批，与“操作运行时具有什么权限”的沙箱是两件事。没有弹窗可能是规则已允许、审批策略允许自动执行，也可能是限制被关闭；单凭体验顺畅，不能判断是哪一种。</p>
+      </section>
+
+      <section id="platforms"><h2>三、同一个目标，在不同系统上有不同实现</h2>
+      <p>“包装命令”是理解本机沙箱的一个好入口，但不能理解成只改一段字符串。真正重要的是：包装后的启动过程调用了系统机制，让新进程确实受到约束。</p>
+      <h3>macOS：先应用策略，再运行原命令</h3>
+      <p>Codex 官方说明使用 Seatbelt 策略，并通过 <code>sandbox-exec</code> 启动命令。公开源码中也明确指定系统路径 <code>/usr/bin/sandbox-exec</code>。<a class="ref" href="#ref-1">[1]</a><a class="ref" href="#ref-3">[3]</a></p>
+      <figure class="code"><figcaption>启动形态示意；“生成的策略”是占位说明，不是可直接执行的配置</figcaption><pre><code># 普通启动
+python3 report.py
+
+# 受限启动的概念形态
+/usr/bin/sandbox-exec -p '生成的策略' python3 report.py</code></pre></figure>
+      <p>Python 仍然是 Python，并不需要换成一个“安全版解释器”。变化在于它启动时被施加了策略。后续文件操作能否成功，由系统结合策略和原有权限判断，而不是重新问模型愿不愿意遵守。</p>
+      <h3>Windows：用受限身份启动进程</h3>
+      <p>Codex 官方文档描述了两种原生模式：较强的 <code>elevated</code> 模式使用专用低权限账户、文件权限和防火墙规则；<code>unelevated</code> 模式从当前用户派生受限权限凭证，网络控制较弱。前者需要管理员批准初始化，<strong>不表示 Agent 命令以管理员身份运行</strong>，也不要求启动微软的 Windows Sandbox 虚拟机。<a class="ref" href="#ref-2">[2]</a></p>
+      <p>在本文核对的 Codex 源码版本中，<code>token.rs</code> 调用 <code>CreateRestrictedToken</code> 创建受限凭证，<code>process.rs</code> 使用 <code>CreateProcessAsUserW</code> 携带凭证启动程序。这里的 Token 是 Windows 的身份与权限凭证，可以比作门禁卡，不是模型计费的 token。<a class="ref" href="#ref-4">[4]</a><a class="ref" href="#ref-5">[5]</a></p>
+      <h3>Linux / WSL2：利用 Linux 的隔离机制</h3>
+      <p>Codex 官方说明，Linux 默认采用 Bubblewrap（<code>bwrap</code>）配合 seccomp：前者帮助建立受隔离的运行视图，后者限制部分系统调用。Windows 上通过 WSL2 运行时走 Linux 路线，而不是原生 Windows 那套实现。<a class="ref" href="#ref-1">[1]</a></p>
+      <h3>TRAE：区分已公开的能力与未公开的实现</h3>
+      <p>TRAE 的 IDE 沙箱文档（当前称 TraeCode）列出：macOS 使用 <code>sandbox-exec</code>，Windows 使用自研沙箱 SDK，WSL2 / Linux 使用 Bubblewrap 和命名空间。文档没有展开 Windows SDK 的内部系统调用，因此不能把它直接认定为与 Codex 相同的实现，也不能仅凭“SDK”断言它是一台虚拟机。<a class="ref" href="#ref-6">[6]</a></p>
+      <p>TraeWork 则明确区分运行模式：Windows 本地 Code 使用本机受限环境，Work / Design 使用隔离的虚拟化环境，并通过受控方式共享项目文件；项目内写入会同步到本地。这个结论有平台和模式前提，不能推广成“TRAE 所有任务都在虚拟机里”。<a class="ref" href="#ref-7">[7]</a></p>
+      </section>
+
+      <section id="forms"><h2>四、本机受限执行与独立环境，解决的问题不同</h2>
+      <div class="table-wrap"><table><thead><tr><th scope="col">形态</th><th scope="col">直观理解</th><th scope="col">主要取舍</th></tr></thead><tbody><tr><td>本机受限进程</td><td>使用现有电脑和工具，但缩小进程权限。</td><td>容易衔接已有项目；需要细致划定可访问资源。</td></tr><tr><td>容器</td><td>给任务独立的文件与进程视图，通常共享所在主机的内核。</td><td>方便复制和管理环境；隔离能力仍依赖配置。桌面上的 Linux 容器也可能运行在一层虚拟机中。</td></tr><tr><td>虚拟机 / 微型虚拟机</td><td>给任务一套带独立客体内核的运行环境。</td><td>提供不同的系统隔离边界，但需管理环境、资源和文件交换。</td></tr></tbody></table></div>
+      <p>容器并不是小号虚拟机。Docker 官方说明了命名空间、资源控制和能力限制的配合作用；它们共同形成边界，而不是“用了容器”四个字自动保证安全。<a class="ref" href="#ref-8">[8]</a></p>
+      <p>对于已有的本地项目，本机受限执行能更自然地复用工具链和文件；对于独立交付、远程执行或多个任务并行，独立环境更容易管理彼此隔离和清理。这是工程取舍，不是所有产品都遵循的统一选型规则。</p>
+      <p>报告、表格、图片等任务往往更容易被整理成“输入材料—处理—输出成果”，而代码任务可能依赖特定项目的服务、配置和工具链。不过，关键不在输出文件多少，而在于<strong>任务与原有环境绑定得有多深</strong>。这也解释了为什么同一产品可能针对不同场景采用不同执行方式；它不是对厂商内部决策的证实。</p>
+      </section>
+
+      <section id="independent"><h2>五、独立环境也要管理工具、文件和权限</h2>
+      <p>开发独立沙箱，不只是启动一个空容器或虚拟机。平台还要让任务具备工作条件，并把结果可靠地交还给用户。以下是通用实现方式，不是某个产品的完整架构。</p>
+      <ul><li><strong>准备工具：</strong>通过预装模板提供 Python、Node 等运行时，或按项目安装依赖；模板和缓存可以复用，不必每次从空环境开始。</li><li><strong>放入材料：</strong>复制文件、拉取 Git 仓库，或把指定目录挂载进去。私有仓库凭证应按需授予。</li><li><strong>控制权限：</strong>分别决定文件读写、联网范围、凭证访问、内部管理员权限，以及 CPU、内存、磁盘和运行时长。</li><li><strong>取出成果：</strong>导出文件或代码差异，写到指定输出区，或经授权后推送代码分支。共享目录则可能直接把修改反映到外部。</li><li><strong>回收环境：</strong>先确认成果已持久保存，再销毁临时环境；不能把任务结束误当作文件已安全交付。</li></ul>
+      <aside class="emphasis"><p>挂载不一定是复制。把真实目录以可写方式挂进沙箱，就可能让沙箱里的修改直接影响真实文件。</p></aside>
+      <p>Docker 的绑定挂载文档明确指出，默认可写挂载能修改宿主文件；需要只读时应显式设置。它是理解“环境隔离了，为什么文件仍会变化”的具体例子。<a class="ref" href="#ref-9">[9]</a></p>
+      <h3>隔离得更好，不等于内部可以毫无限制</h3>
+      <p>一次性环境可以允许程序安装软件、修改内部配置，甚至允许弄坏后重建。但如果它拿到了真实服务凭证，又能联网，仍然可能修改外部数据。文件挂载、网络连接和账号凭证，都是通向外界的入口。</p>
+      <p>例如，分析一份日志副本时，可以只提供输入副本和输出目录，不提供生产密钥。相反，把生产账号交给虚拟机，并不会因为“在虚拟机里”就消除误操作风险。独立环境能让一部分内部权限适当放宽，不能让外部授权变得不再重要。</p>
+      </section>
+
+      <section id="takeaway"><h2>判断沙箱，看边界，不只看名字</h2>
+      <p>了解一个 Agent 的沙箱，可以追问四件事：哪些工具经过它？程序在哪里执行？哪些文件、网络和凭证真正可用？成果如何回到外部？这些答案，比“安全环境”“自研 SDK”或“容器化”这样的标签更有用。</p>
+      <p><strong>沙箱的本质，是把执行权限变成可落实的边界。</strong>本机进程、容器和虚拟机是实现这个目标的不同手段。产品开发者通常是在现有系统机制上完成策略、启动、授权、资源和生命周期管理，而不是从头开发一台虚拟机。</p>
+      <p class="small">延伸阅读：<a href="https://wwzzb.github.io/wWzZb/articles/agent-runtime-control/">Agent 的行为由谁决定：模型、工具与运行时</a>，进一步区分模型要求与应用程序的强制控制。</p>
+      </section>
+    </main>
+    <footer>
+      <h2>参考资料</h2>
+      <ol>
+        <li id="ref-1"><a href="https://learn.chatgpt.com/docs/agent-approvals-security#os-level-sandbox">OpenAI：Agent approvals &amp; security — OS-level sandbox</a>，各平台执行机制。</li>
+        <li id="ref-2"><a href="https://learn.chatgpt.com/docs/windows/windows-sandbox">OpenAI：Windows sandbox</a>，原生模式与权限边界。</li>
+        <li id="ref-3"><a href="https://github.com/openai/codex/blob/b0659c53865dd48b0cd69c454368cea3980017cc/codex-rs/sandboxing/src/seatbelt.rs#L59">Codex 源码：Seatbelt 启动器路径</a>。</li>
+        <li id="ref-4"><a href="https://github.com/openai/codex/blob/b0659c53865dd48b0cd69c454368cea3980017cc/codex-rs/windows-sandbox-rs/src/token.rs">Codex 源码：Windows 受限凭证</a>。</li>
+        <li id="ref-5"><a href="https://github.com/openai/codex/blob/b0659c53865dd48b0cd69c454368cea3980017cc/codex-rs/windows-sandbox-rs/src/process.rs#L149">Codex 源码：使用凭证启动进程</a>。</li>
+        <li id="ref-6"><a href="https://docs.trae.cn/ide_sandbox">TRAE：IDE / TraeCode 沙箱</a>，平台支持与自研 SDK 的公开说明。</li>
+        <li id="ref-7"><a href="https://docs.trae.cn/work_sandbox">TRAE：TraeWork 沙箱</a>，各模式的环境与文件共享。</li>
+        <li id="ref-8"><a href="https://docs.docker.com/engine/security/">Docker：Engine security</a>，容器隔离与能力限制。</li>
+        <li id="ref-9"><a href="https://docs.docker.com/engine/storage/bind-mounts/">Docker：Bind mounts</a>，绑定挂载对宿主文件的影响。</li>
+      </ol>
+      <p>核对日期：2026-09-17。源码固定在 Codex 提交 b0659c53865dd48b0cd69c454368cea3980017cc；文档会随产品更新。本文依据文档和源码解释机制，未进行跨平台攻防或性能实测。命令形态、访问规则与分析场景均为解释性示例。</p>
+    </footer>
+  </article>
+</body>
+</html>

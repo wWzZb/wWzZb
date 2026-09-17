@@ -20,6 +20,13 @@ class BlogBuildTests(unittest.TestCase):
         shutil.copy(build.ROOT/'site.json',self.root/'site.json')
         for name in ('content','public'):
             shutil.copytree(build.ROOT/name,self.root/name)
+        self.published_count = sum(
+            not json.loads(re.search(
+                r'<script type="application/json" id="article-meta">(.*?)</script>',
+                path.read_text(), re.S
+            ).group(1))['draft']
+            for path in (self.root/'content/articles').glob('*.html')
+        )
 
     def tearDown(self):
         self.temp.cleanup()
@@ -38,14 +45,14 @@ class BlogBuildTests(unittest.TestCase):
         source=self.root/'content/articles/agent-context-state.html'
         original=source.read_bytes()
         result=build.build(self.root)
-        self.assertEqual(result['articles'],4)
+        self.assertEqual(result['articles'],self.published_count)
         self.assertEqual(source.read_bytes(),original)
         self.assertEqual((self.root/'dist/standalone/agent-context-state.html').read_bytes(),original)
         rendered=(self.root/'dist/articles/agent-context-state/index.html').read_text()
         source_main=re.search(r'<main\b[^>]*>(.*?)</main>',original.decode(),re.S).group(1)
         output_main=re.search(r'<main\b[^>]*>(.*?)</main>',rendered,re.S).group(1)
         self.assertEqual(source_main,output_main)
-        self.assertEqual(verify(self.root/'dist')[1],4)
+        self.assertEqual(verify(self.root/'dist')[1],self.published_count)
 
     def test_drafts_are_absent_from_all_public_outputs(self):
         self.metadata(draft=True)
@@ -54,7 +61,7 @@ class BlogBuildTests(unittest.TestCase):
         self.assertFalse((dist/'articles/agent-context-state').exists())
         self.assertFalse((dist/'standalone/agent-context-state.html').exists())
         index=json.loads((dist/'search-index.json').read_text())
-        self.assertEqual(len(index['articles']),3)
+        self.assertEqual(len(index['articles']),self.published_count - 1)
         self.assertNotIn('/articles/agent-context-state/',(dist/'index.html').read_text())
         self.assertNotIn('/articles/agent-context-state/',(dist/'topics/context-management/index.html').read_text())
 
@@ -64,7 +71,7 @@ class BlogBuildTests(unittest.TestCase):
         build.build(self.root)
         self.assertFalse((self.root/'dist/articles/agent-context-state').exists())
         self.assertFalse((self.root/'dist/standalone/agent-context-state.html').exists())
-        self.assertEqual(verify(self.root/'dist')[1],3)
+        self.assertEqual(verify(self.root/'dist')[1],self.published_count - 1)
 
     def test_project_path_links_search_and_feeds(self):
         build.build(self.root,base_path='/my-blog',site_url='https://example.github.io/my-blog')
@@ -72,7 +79,7 @@ class BlogBuildTests(unittest.TestCase):
         index=json.loads((self.root/'dist/search-index.json').read_text())
         self.assertTrue(all(a['url'].startswith('/my-blog/articles/') for a in index['articles']))
         rss=ET.parse(self.root/'dist/feed.xml').getroot()
-        self.assertEqual(len(rss.findall('./channel/item')),4)
+        self.assertEqual(len(rss.findall('./channel/item')),self.published_count)
         self.assertTrue(all(item.text.startswith('https://example.github.io/my-blog/') for item in rss.findall('./channel/item/link')))
         sitemap=ET.parse(self.root/'dist/sitemap.xml').getroot()
         urls=[el.text for el in sitemap.findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
@@ -82,7 +89,7 @@ class BlogBuildTests(unittest.TestCase):
     def test_mixed_case_repository_path_is_preserved(self):
         build.build(self.root,base_path='/wWzZb',site_url='https://wwzzb.github.io/wWzZb')
         dist=self.root/'dist'
-        self.assertEqual(verify(dist,'/wWzZb')[1],4)
+        self.assertEqual(verify(dist,'/wWzZb')[1],self.published_count)
         self.assertIn('href="/wWzZb/assets/site.css"',(dist/'index.html').read_text())
         index=json.loads((dist/'search-index.json').read_text())
         self.assertTrue(all(a['url'].startswith('/wWzZb/articles/') for a in index['articles']))
@@ -176,7 +183,7 @@ class BlogBuildTests(unittest.TestCase):
         article=build.parse_article(target,build.load_config(self.root))
         self.assertEqual(article.title,'标题 <示例> {{META}}')
         self.assertTrue(article.meta['draft'])
-        self.assertEqual(build.build(self.root)['articles'],4)
+        self.assertEqual(build.build(self.root)['articles'],self.published_count)
         second=subprocess.run(command,capture_output=True,text=True)
         self.assertNotEqual(second.returncode,0)
         self.assertEqual(content,target.read_bytes())
